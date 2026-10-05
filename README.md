@@ -5,10 +5,10 @@ Analyze Thailand Tourism and visitor data using Python.
 
 ## Roadmap / Progress
 - [x] Read the CSV file
-- [ ] Validate that the file exists
+- [x] Validate that the file exists
 - [x] Read and iterate through the data
 - [x] Identify missing or invalid values
-- [ ] Clean the data where appropriate
+- [x] Clean the data where appropriate
 - [ ] Calculate key tourism statistics
 - [ ] Translate data into English
 - [ ] Display a summary
