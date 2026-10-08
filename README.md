@@ -11,5 +11,5 @@ Analyze Thailand Tourism and visitor data using Python.
 - [x] Clean the data where appropriate
 - [x] Calculate key tourism statistics
 - [x] Translate data into English
-- [ ] Display a summary
-- [ ] Save the summary to a text file
+- [x] Display a summary
+- [x] Save the summary to a text file

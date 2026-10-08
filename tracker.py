@@ -3,7 +3,6 @@ from translations import province_names
 
 def main():
     data = load_data("data/tourism.csv")
-
     year1 = convert_year(data[3][8]) #2568P to 2025
     year2 = convert_year(data[3][9]) #2567 to 2024
 
@@ -13,16 +12,19 @@ def main():
     "ภาคใต้",
     "ภาคเหนือ"]
 
-    stats = calculate_stats(data, regions)
-    total_2025, total_2024, percentage_change, highest_visitors, highest_province, lowest_visitors, lowest_province = stats
+    province_data = prepare_province_data(data, regions)
+    stats = calculate_stats(province_data)
+    total_2025, total_2024, formatted_change, highest_visitors, highest_province, lowest_visitors, lowest_province = stats
+
+    #Output
+    #save_summary(province_data, "output/tourism_summary.csv")
 
     print(f"Total visitors in {year1}: {total_2025:,}")
     print(f"Total visitors in {year2}: {total_2024:,}")
-    print(f"Percentage change: {percentage_change:.2f}%")
+    print(f"Percentage change: {formatted_change}")
     print(f"Highest: {highest_province} - {highest_visitors:,}")
     print(f"Lowest: {lowest_province} - {lowest_visitors:,}")
     
-
 def load_data(filename): #Open and read the csv
     try:
         with open(filename, "r", encoding="utf-8-sig", newline="") as file:
@@ -49,7 +51,28 @@ def clean_number(value): #Cleaning commas and space then return clean number
 def translate_province(thai_name):
     return province_names.get(thai_name, thai_name)
 
-def calculate_stats(data, regions):
+def prepare_province_data(data, regions):
+    province_data = []
+
+    for index, row in enumerate(data):
+        if 4<= index < 85 and row[1] not in regions:
+            province = translate_province(row[1])
+            visitor_2025 = clean_number(row[8])
+            visitor_2024 = clean_number(row[9])
+
+            percentage_change = ((visitor_2025 - visitor_2024)/visitor_2024)* 100
+            formatted_change = f"{percentage_change:.2f}%"
+
+            province_data.append({
+                "province": province,
+                "2025": visitor_2025,
+                "2024": visitor_2024,
+                "Change": formatted_change
+            })
+
+    return province_data
+
+def calculate_stats(province_data):
     total_2025 = 0
     total_2024 = 0
     highest_visitors = 0
@@ -57,35 +80,39 @@ def calculate_stats(data, regions):
     lowest_visitors = float('inf')
     lowest_province = ""
 
-    for index, row in enumerate(data):
-            if 4 <= index < 85 and row[1] not in regions:
-                province = translate_province(row[1])
-                visitor_2025 = clean_number(row[8])
-                visitor_2024 = clean_number(row[9])
+    for item in province_data:
+        total_2025 += item["2025"]
+        total_2024 += item["2024"]
     
-                #finding out the total visitors for 2025 and 2024
-                total_2025 += visitor_2025
-                total_2024 += visitor_2024
+        #Finding out which province has the highest visitors in 2025
+        if item["2025"] > highest_visitors:
+            highest_visitors = item["2025"]
+            highest_province = item["province"]
     
-                #Finding out which province has the highest visitors in 2025
-                if visitor_2025 > highest_visitors:
-                    highest_visitors = visitor_2025
-                    highest_province = province
-    
-                #Finding out which province has the lowest visitors in 2025
-                if visitor_2025 < lowest_visitors:
-                    lowest_visitors = visitor_2025
-                    lowest_province = province
+        #Finding out which province has the lowest visitors in 2025
+        if item["2025"] < lowest_visitors:
+            lowest_visitors = item["2025"]
+            lowest_province = item["province"]
 
     #Finding out how much percentage of visitors change from 2024 to 2025
     percentage_change = ((total_2025 - total_2024)/total_2024)*100
+    formatted_change = f"{percentage_change:.2f}%"
 
     return ( 
         total_2025, total_2024,
-        percentage_change,
+        formatted_change,
         highest_visitors, highest_province,
         lowest_visitors, lowest_province
         )
+
+def save_summary(province_data, filename):
+    with open(filename, "w", encoding= "utf-8", newline="") as file:
+        fieldnames = ["province", "2025", "2024", "Change"]
+
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerows(province_data)
 
 if __name__ == "__main__":
       main()
